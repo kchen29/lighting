@@ -44,45 +44,39 @@
     (draw-line-index edges index color)))
 
 ;;;3d shapes
-(defun draw-polygon (x0 y0 z0 x1 y1 z1 x2 y2 z2)
+(defun draw-polygon (x0 y0 z0 x1 y1 z1 x2 y2 z2 color)
   "Draws the polygon to *SCREEN*."
-  (let ((color (mapcar (lambda (a b c) (mod (round (* a b c)) 256))
-                       (list x0 y0 z0)
-                       (list x1 y1 z1)
-                       (list x2 y2 z2))))
-    (draw-line x0 y0 z0 x1 y1 z1 color)
-    (draw-line x0 y0 z0 x2 y2 z2 color)
-    (draw-line x1 y1 z1 x2 y2 z2 color)
-    (scanline x0 y0 z0 x1 y1 z1 x2 y2 z2 color)))
+  (draw-line x0 y0 z0 x1 y1 z1 color)
+  (draw-line x0 y0 z0 x2 y2 z2 color)
+  (draw-line x1 y1 z1 x2 y2 z2 color)
+  (scanline x0 y0 z0 x1 y1 z1 x2 y2 z2 color))
 
-(defun draw-polygon-index (polygons index)
+(defun draw-polygon-index (polygons index color)
   "Draws the polygon starting from INDEX in POLYGONS"
   (macrolet-helper
     `(draw-polygon
       ,@(generate ((in 3) (co 3))
-          `(mref polygons ,co (+ ,in index))))))
+          `(mref polygons ,co (+ ,in index)))
+      color)))
 
 (defun draw-polygons (polygons)
   "Draws the polygons from POLYGONS to *SCREEN*."
   (do-step (index (m-last-col polygons) 3)
     (when (forward-facing-p polygons index)
-      (draw-polygon-index polygons index))))
+      (draw-polygon-index polygons index '(255 0 255)))))
 
-;;closure, for efficiency
-(let ((temp1 (make-array 3))
-      (temp2 (make-array 3)))
-  (defun forward-facing-p (polygons index)
-    "Returns true if the surface in POLYGONS starting 
+(defun forward-facing-p (polygons index)
+  "Returns true if the surface in POLYGONS starting 
      at INDEX is forward-facing."
-    (dotimes (x 3)
-      (setf (svref temp1 x) (- (mref polygons x index)
-                               (mref polygons x (1+ index)))
-            (svref temp2 x) (- (mref polygons x index)
-                               (mref polygons x (+ 2 index)))))
-    (plusp (- (* (svref temp1 0)
-                 (svref temp2 1))
-              (* (svref temp2 0)
-                 (svref temp1 1))))))
+  (dotimes (x 3)
+    (setf (svref temp1 x) (- (mref polygons x index)
+                             (mref polygons x (1+ index)))
+          (svref temp2 x) (- (mref polygons x index)
+                             (mref polygons x (+ 2 index)))))
+  (plusp (- (* (svref temp1 0)
+               (svref temp2 1))
+            (* (svref temp2 0)
+               (svref temp1 1)))))
 
 (defun scanline (x0 y0 z0 x1 y1 z1 x2 y2 z2 color)
   "Does scanline conversion."

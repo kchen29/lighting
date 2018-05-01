@@ -69,14 +69,10 @@
       (dotimes (i dimension)
         (setf (svref temp i) (mref m2 i col)))
       (dotimes (row dimension)
-        (setf (mref m2 row col) (dot row m1 temp)))))
+        (setf (mref m2 row col)
+              (loop for i below (m-cols m1)
+                    sum (* (mref m1 row i) (svref temp i)))))))
   m2)
-
-(defun dot (row m1 temp)
-  "Dots the ROW of M1 with TEMP.
-   They should have the same corresponding sizes."
-  (loop for i below (m-cols m1)
-        sum (* (mref m1 row i) (svref temp i))))
 
 ;;;transformations
 (defun make-transform-matrix ()
