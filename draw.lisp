@@ -62,21 +62,9 @@
 (defun draw-polygons (polygons)
   "Draws the polygons from POLYGONS to *SCREEN*."
   (do-step (index (m-last-col polygons) 3)
-    (when (forward-facing-p polygons index)
-      (draw-polygon-index polygons index '(255 0 255)))))
-
-(defun forward-facing-p (polygons index)
-  "Returns true if the surface in POLYGONS starting 
-     at INDEX is forward-facing."
-  (dotimes (x 3)
-    (setf (svref temp1 x) (- (mref polygons x index)
-                             (mref polygons x (1+ index)))
-          (svref temp2 x) (- (mref polygons x index)
-                             (mref polygons x (+ 2 index)))))
-  (plusp (- (* (svref temp1 0)
-               (svref temp2 1))
-            (* (svref temp2 0)
-               (svref temp1 1)))))
+    (let ((normal (normal polygons index)))
+      (when (plusp (svref normal 2))
+        (draw-polygon-index polygons index '(255 0 255))))))
 
 (defun scanline (x0 y0 z0 x1 y1 z1 x2 y2 z2 color)
   "Does scanline conversion."

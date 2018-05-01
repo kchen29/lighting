@@ -1,9 +1,10 @@
 ;;;; math functions for vectors and lighting.
 
-(defun normal (polygons index)
-  "Returns the normal of the surface defined by POLYGONS at INDEX."
-  (let ((temp1 (make-array 3))
-        (temp2 (make-array 3)))
+;;closure, for fun
+(let ((temp1 (make-array 3))
+      (temp2 (make-array 3)))
+  (defun normal (polygons index)
+    "Returns the normal of the surface defined by POLYGONS at INDEX."
     (dotimes (x 3)
       (setf (svref temp1 x) (- (mref polygons x index)
                                (mref polygons x (1+ index)))
