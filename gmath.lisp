@@ -27,17 +27,7 @@
              (* (svref v1 1)
                 (svref v2 0)))))
 
-;;define as dynamic variables for now
-;;closure later
-;;everything are lists for now
-(defparameter ambient '(50 50 50))
-(defparameter view '(0 0 1))
-(defparameter light '(1 1 1))
-(defparameter light-color '(255 0 255))
-(defparameter areflect '(0.1 0.1 0.1))
-(defparameter dreflect '(0.5 0.5 0.5))
-(defparameter sreflect '(0.5 0.5 0.5))
-
+;;;treating vectors as lists
 (defun magnitude (vector)
   "Calculates the magnitude of the vector."
   (sqrt (loop for x in vector
@@ -57,6 +47,10 @@
   "Adds VECTORS together."
   (apply #'mapcar #'+ vectors))
 
+(defun --v (&rest vectors)
+  "Subtracts the rest of the VECTORS from the first."
+  (apply #'mapcar #'- vectors))
+
 (defun scale-v (vector scalar)
   "Scales VECTOR by SCALAR."
   (mapcar (lambda (x) (* x scalar)) vector))
@@ -66,6 +60,17 @@
   (loop for x in v1
         for y in v2
         sum (* x y)))
+
+;;define as dynamic variables for now
+;;closure later
+;;everything are lists for now
+(defparameter ambient '(50 50 50))
+(defparameter view '(0 0 1))
+(defparameter light '(1 1 1))
+(defparameter light-color '(255 0 255))
+(defparameter areflect '(0.1 0.1 0.1))
+(defparameter dreflect '(0.5 0.5 0.5))
+(defparameter sreflect '(1 1 1))
 
 (defun bound (color)
   "Checks and fixes the values of color."
@@ -87,6 +92,7 @@
                     (dot normal light)))
           (bound
            (scale-v (hadamard-* light-color sreflect)
-                    (dot view (+-v (scale-v normal
-                                            (* 2 (dot normal light)))
-                                   (scale-v light -1)))))))))
+                    (expt (max 0 (dot view (--v (scale-v normal
+                                                         (* 2 (dot normal light)))
+                                                light)))
+                          16)))))))
