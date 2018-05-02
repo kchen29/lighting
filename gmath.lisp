@@ -53,15 +53,14 @@
 (defun *-v (&rest factors)
   "Generalizes multiplication for scalars and vectors. Multiplies 2 vectors component-wise."
   (let ((product 1))
-    (dolist (factor factors)
+    (dolist (factor factors product)
       (setf product (if (atom product)
                         (if (atom factor)
                             (* product factor)
                             (scale-v factor product))
                         (if (atom factor)
                             (scale-v product factor)
-                            (hadamard-* product factor)))))
-    product))
+                            (hadamard-* product factor)))))))
 
 (defun hadamard-* (v1 v2)
   "Multiples V1 and V2 component-wise. The Hadamard product."
