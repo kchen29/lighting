@@ -19,17 +19,17 @@
          (nreverse ,var)))))
 
 (defmacro nested-loops (loops &body body)
-  "Generates nested loops."
-  (do ((head (cons 'progn body) (list (if (listp (cadar forms)) 'dolist 'dotimes)
-                           (car forms) head))
-       (forms (nreverse loops) (cdr forms)))
-      ((null forms) head)))
+  "Creates nested loops."
+  (let ((head `(progn ,@body)))
+    (dolist (form (nreverse loops) head)
+      (setf head (list (if (listp (cadr form)) 'dolist 'dotimes)
+                       form head)))))
 
 ;;the iteration value for each of the loops should be a list or positive integer
 (defmacro generate (loops &body bases)
-  "Generates nested loops and collects BASES forms."
+  "Generates nested loops and collects BASES."
   `(collect-to
-     (nested-loops ,loops (collect ,(car bases)))))
+     (nested-loops ,loops ,@(mapcar (lambda (x) `(collect ,x)) bases))))
 
 ;;control constructs
 (defmacro do-step-max ((var step max) &body body)
