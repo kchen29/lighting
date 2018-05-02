@@ -28,6 +28,12 @@
                 (svref v2 0)))))
 
 ;;;treating vectors as lists
+(defun dot (v1 v2)
+  "Dots V1 and V2."
+  (loop for x in v1
+        for y in v2
+        sum (* x y)))
+
 (defun magnitude (vector)
   "Calculates the magnitude of the vector."
   (sqrt (loop for x in vector
@@ -39,10 +45,6 @@
         with magnitude = (magnitude vector)
         collect (/ x magnitude)))
 
-(defun hadamard-* (v1 v2)
-  "Multiples V1 and V2 component-wise. The Hadamard product."
-  (mapcar #'* v1 v2))
-
 (defun +-v (&rest vectors)
   "Adds VECTORS together."
   (apply #'mapcar #'+ vectors))
@@ -51,16 +53,28 @@
   "Subtracts the rest of the VECTORS from the first."
   (apply #'mapcar #'- vectors))
 
+(defun *-v (&rest factors)
+  "Generalizes multiplication for scalars and vectors. Multiplies 2 vectors component-wise."
+  (let ((product 1))
+    (dolist (factor factors)
+      (setf product (if (atom product)
+                        (if (atom factor)
+                            (* product factor)
+                            (scale-v factor product))
+                        (if (atom factor)
+                            (scale-v product factor)
+                            (hadamard-* product factor)))))
+    product))
+
+(defun hadamard-* (v1 v2)
+  "Multiples V1 and V2 component-wise. The Hadamard product."
+  (mapcar #'* v1 v2))
+
 (defun scale-v (vector scalar)
   "Scales VECTOR by SCALAR."
   (mapcar (lambda (x) (* x scalar)) vector))
 
-(defun dot (v1 v2)
-  "Dots V1 and V2."
-  (loop for x in v1
-        for y in v2
-        sum (* x y)))
-
+;;;lighting
 ;;define as dynamic variables for now
 ;;closure later
 ;;everything are lists for now
@@ -85,14 +99,9 @@
   (let ((normal (normalize normal))
         (light (normalize light)))
     (rbound
-     (+-v (bound
-           (hadamard-* ambient areflect))
-          (bound
-           (scale-v (hadamard-* light-color dreflect)
-                    (dot normal light)))
-          (bound
-           (scale-v (hadamard-* light-color sreflect)
-                    (expt (max 0 (dot view (--v (scale-v normal
-                                                         (* 2 (dot normal light)))
-                                                light)))
-                          16)))))))
+     (+-v (bound (*-v ambient areflect))
+          (bound (*-v light-color dreflect (dot normal light)))
+          (bound (*-v light-color sreflect
+                      (expt (max 0 (dot view (--v (*-v 2 (dot normal light) normal)
+                                                  light)))
+                            16)))))))
