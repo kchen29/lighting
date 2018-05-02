@@ -1,12 +1,10 @@
 ;;;; Parse a script.
 
 ;;closure
-(let (stack)
+(let ((stack (list (make-transform-matrix))))
   (defun stack-peek () (car stack))
   (defun stack-push (obj) (push obj stack))
   (defun stack-pop () (pop stack)))
-
-(stack-push (make-transform-matrix))
 
 (defun parse-file (filename edges polygons)
   "Parses FILENAME. Uses EDGES and POLYGONS matrices to store edges

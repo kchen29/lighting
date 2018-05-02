@@ -14,18 +14,15 @@
 
 (defun cross-product (v1 v2)
   "Returns the cross-product of V1 and V2."
-  (vector (- (* (svref v1 1)
-                (svref v2 2))
-             (* (svref v1 2)
-                (svref v2 1)))
-          (- (* (svref v1 2)
-                (svref v2 0))
-             (* (svref v1 0)
-                (svref v2 2)))
-          (- (* (svref v1 0)
-                (svref v2 1))
-             (* (svref v1 1)
-                (svref v2 0)))))
+  (labels ((prod (a b)
+             (* (svref v1 a)
+                (svref v2 b)))
+           (dif (a b)
+             (- (prod a b)
+                (prod b a))))
+    (vector (dif 1 2)
+            (dif 2 0)
+            (dif 0 1))))
 
 ;;;treating vectors as lists
 (defun dot (v1 v2)

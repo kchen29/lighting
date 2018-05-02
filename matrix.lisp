@@ -65,14 +65,13 @@
    Multiplies M1 with M2. Modifies M2 to hold the result. Returns M2."
   (let* ((dimension (m-rows m1))
          (temp (make-array dimension)))
-    (dotimes (col (m-last-col m2))
+    (dotimes (col (m-last-col m2) m2)
       (dotimes (i dimension)
         (setf (svref temp i) (mref m2 i col)))
       (dotimes (row dimension)
         (setf (mref m2 row col)
               (loop for i below (m-cols m1)
-                    sum (* (mref m1 row i) (svref temp i)))))))
-  m2)
+                    sum (* (mref m1 row i) (svref temp i))))))))
 
 ;;;transformations
 (defun make-transform-matrix ()
