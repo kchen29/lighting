@@ -1,8 +1,16 @@
 ;;;; Parse a script.
 
-(defun parse-file (filename edges polygons stack)
+;;closure
+(let (stack)
+  (defun stack-peek () (car stack))
+  (defun stack-push (obj) (push obj stack))
+  (defun stack-pop () (pop stack)))
+
+(stack-push (make-transform-matrix))
+
+(defun parse-file (filename edges polygons)
   "Parses FILENAME. Uses EDGES and POLYGONS matrices to store edges
-   and polygons. STACK is the stack of coordinate systems. Commands write to *SCREEN*.
+   and polygons. Commands write to *SCREEN*.
    The file follows the following format:
      Every command is a single string that takes up a line
      Any command that requires arguments must have those arguments in the second line.
@@ -47,32 +55,31 @@
     (do ((line (next-line stream) (next-line stream)))
         ((string= line "quit"))
       (if (valid-command line)
-          (parse-line line stream edges polygons stack)
+          (parse-line line stream edges polygons)
           (format t "Unknown command: ~a~%" line)))))
 
-(defun parse-line (line stream edges polygons stack)
+(defun parse-line (line stream edges polygons)
   "Parses LINE according to parse-file."
   (switch line #'string=
     ("display" (display t))
     ("clear" (clear-screen))
-    ("push" (setf (cdr stack) (cons (copy-matrix (car stack)) (cdr stack))))
-    ("pop" (setf (car stack) (cadr stack)
-                 (cdr stack) (cddr stack)))
+    ("push" (stack-push (copy-matrix (stack-peek))))
+    ("pop" (stack-pop))
     (otherwise
-     (parse-line-args line edges polygons stack (parse-args (next-line stream))))))
+     (parse-line-args line edges polygons (parse-args (next-line stream))))))
 
-(defun parse-line-args (line edges polygons stack args)
+(defun parse-line-args (line edges polygons args)
   "Parses LINE with arg commands."
   (flet ((post-add-lines ()
-           (matrix-multiply (car stack) edges)
+           (matrix-multiply (stack-peek) edges)
            (draw-lines edges '(255 0 255))
            (clear-matrix edges))
          (post-add-polygons ()
-           (matrix-multiply (car stack) polygons)
+           (matrix-multiply (stack-peek) polygons)
            (draw-polygons polygons)
            (clear-matrix polygons))
          (update-current-stack (transform)
-           (setf (car stack) (matrix-multiply (car stack) transform))))
+           (stack-push (matrix-multiply (stack-pop) transform))))
     (switch line #'string=
       ("line" (apply #'add-edge edges args)
               (post-add-lines))
