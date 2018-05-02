@@ -18,16 +18,18 @@
          ,@body
          (nreverse ,var)))))
 
-;;doesn't actually handle multiple bases; it's currently there for aesthetics.
+(defmacro nested-loops (loops &body body)
+  "Generates nested loops."
+  (do ((head (cons 'progn body) (list (if (listp (cadar forms)) 'dolist 'dotimes)
+                           (car forms) head))
+       (forms (nreverse loops) (cdr forms)))
+      ((null forms) head)))
+
 ;;the iteration value for each of the loops should be a list or positive integer
-;;ideally should be a function
 (defmacro generate (loops &body bases)
   "Generates nested loops and collects BASES forms."
   `(collect-to
-     ,(do ((head `(collect ,(car bases)) (list (if (listp (cadar forms)) 'dolist 'dotimes)
-                                               (car forms) head))
-           (forms (nreverse loops) (cdr forms)))
-          ((null forms) head))))
+     (nested-loops ,loops (collect ,(car bases)))))
 
 ;;control constructs
 (defmacro do-step-max ((var step max) &body body)
