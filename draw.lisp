@@ -1,34 +1,26 @@
 ;;;; Draw to screen.
 
-(defmacro draw-line-base (x0 y0 z0 x1 y1 z1 plot-1 plot-2)
-  "Base code for octant 1. Other octants can be gotten from transformations."
-  `(do* ((x ,x0 (1+ x))
-         (y ,y0)
-         (z ,z0 (+ z (diff-quot ,z1 ,z0 ,x1 ,x0)))
-         (A (- ,y1 ,y0))
-         (B (- ,x0 ,x1))
-         (2A (* 2 A))
-         (2B (* 2 B))
-         (d (+ 2A B) (+ d 2A)))
-        ((>= x ,x1) (plot x1 y1 z1 color))
-     (plot ,plot-1 ,plot-2 z color)
-     (when (> d 0)
-       (incf y)
-       (incf d 2B))))
-
 (defun draw-line (x0 y0 z0 x1 y1 z1 color)
   "Draws a line from (x0, y0) to (x1, y1) on *SCREEN* using COLOR."
+  ;;no need for Bresenham's because CL has rationals.
   (roundify x0 y0 x1 y1)
   (sortify 0 (x0 y0 z0) (x1 y1 z1))
-  (let ((xdif (- x1 x0))
-        (ydif (- y1 y0)))
-    (if (>= ydif 0)
-        (if (minusp (- ydif xdif))
-            (draw-line-base x0 y0 z0 x1 y1 z1 x y)
-            (draw-line-base y0 x0 z0 y1 x1 z1 y x))
-        (if (minusp (+ ydif xdif))
-            (draw-line-base y0 x0 z0 (- y0 ydif) x1 z1 y (- (* 2 y0) x))
-            (draw-line-base x0 y0 z0 x1 (- y0 ydif) z1 x (- (* 2 y0) y))))))
+  (let* ((xdif (- x1 x0))
+         (ydif (- y1 y0))
+         (zdif (- z1 z0))
+         (aydif (abs ydif)))
+    (cond
+      ((and (zerop xdif) (zerop ydif)) (plot x0 y0 (max z0 z1) color))
+      ((< aydif xdif) (do ((x x0 (1+ x))
+                           (y y0 (+ y (/ ydif xdif)))
+                           (z z0 (+ z (/ zdif xdif))))
+                          ((> x x1))
+                        (plot x (round y) z color)))
+      (t (do ((x x0 (+ x (/ xdif aydif)))
+              (y y0 (+ y (signum ydif)))
+              (z z0 (+ z (/ zdif aydif))))
+             ((= y y1) (plot x y z color))
+           (plot (round x) y z color))))))
 
 (defun draw-line-index (edges index color)
   "Draws the line starting from INDEX in EDGES."
