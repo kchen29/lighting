@@ -109,15 +109,10 @@
 
 (defun concat-symbol (&rest args)
   "Takes symbols and strings to form a new symbol."
-  (intern (apply #'concatenate 'string
-                 (mapcar (lambda (x) (string-upcase (string x))) args))))
+  (intern (string-upcase (apply #'concat-string args))))
 
 (defun concat-string (&rest args)
   "Takes symbols and strings to form a string."
-  (apply #'concatenate 'string
-         (mapcar (lambda (x)
-                   (if (symbolp x)
-                       (string-downcase (string x))
-                       x))
-                 args)))
+  (string-downcase (with-output-to-string (s)
+                     (dolist (a args) (princ a s)))))
 
