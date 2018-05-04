@@ -1,77 +1,63 @@
 ;;;; Matrices and transformations.
 
-;;matrix struct definition
-;;somewhat hacky
-(defstruct (matrix (:conc-name m-)
-                   (:constructor m-matrix)
-                   (:copier m-copy-matrix)
-                   (:print-object print-matrix))
-  rows
-  cols
-  ;;last-col is how many columns there are
-  last-col
-  array)
+(def-class matrix
+    ((rows 4)
+     (cols 4)
+     (last-col 0)
+     (array (make-array (list rows cols) :adjustable t)))
+
+  (defun copy-matrix (matrix)
+    "Copies a matrix."
+    (make-matrix :rows rows :cols cols :last-col last-col :array (copy-array array)))
+
+  ;;other matrix functions
+  (defun adjust-matrix (matrix new-rows new-cols)
+    "Adjusts MATRIX to ROWS and COLS. Keeps last-col."
+    (adjust-array array (list new-rows new-cols))
+    (setf rows new-rows)
+    (setf cols new-cols))
+
+  (defun clear-matrix (matrix)
+    "Clears MATRIX."
+    (adjust-matrix matrix 4 4)
+    (setf last-col 0))
+
+  ;;print-matrix
+  (defun print-matrix (matrix stream)
+    "Prints out MATRIX to STREAM."
+    (format stream "~{~%~{~a~4,4T~}~}~%" (matrix-to-list matrix)))
+
+  (defun matrix-to-list (matrix)
+    "Turns MATRIX into a list."
+    (loop for x below rows
+          collect (loop for y below last-col
+                        collect (aref array x y))))
+
+  ;;identity, and multiply
+  (defun to-identity (matrix)
+    "Turns MATRIX into an identity matrix. Returns the matrix."
+    (dotimes (x rows matrix)
+      (dotimes (y last-col)
+        (if (= x y)
+            (setf (aref array x y) 1)
+            (setf (aref array x y) 0)))))
+
+  (defun matrix-multiply (matrix m2)
+    "A specific matrix multiplication routine. MATRIX is square.
+     Multiplies MATRIX with M2. Modifies M2 to hold the result. Returns M2."
+    (with-args (cols2 last-col2 array2) m2
+      (let ((temp (make-array rows)))
+        (dotimes (col last-col2 m2)
+          (dotimes (i rows)
+            (setf (svref temp i) (aref array2 i col)))
+          (dotimes (row rows)
+            (setf (aref array2 row col)
+                  (loop for i below cols
+                        sum (* (aref array row i) (svref temp i))))))))))
 
 (defmacro mref (matrix x y)
   "Accesses array of MATRIX at X and Y."
-  `(aref (m-array ,matrix) ,x ,y))
-
-(defun make-matrix (&key (rows 4) (cols 4) (last-col 0))
-  "Makes a matrix."
-  (m-matrix :rows rows :cols cols :last-col last-col
-            :array (make-array (list rows cols) :adjustable t)))
-
-(defun copy-matrix (matrix)
-  "Copies a matrix."
-  (let ((copy (m-copy-matrix matrix)))
-    (setf (m-array copy) (copy-array (m-array copy)))
-    copy))
-
-;;other matrix functions
-(defun adjust-matrix (matrix rows cols)
-  "Adjusts MATRIX to ROWS and COLS.
-   Keeps last-col."
-  (adjust-array (m-array matrix) (list rows cols))
-  (setf (m-rows matrix) rows)
-  (setf (m-cols matrix) cols))
-
-(defun clear-matrix (matrix)
-  "Clears MATRIX."
-  (adjust-matrix matrix 4 4)
-  (setf (m-last-col matrix) 0))
-
-(defun print-matrix (matrix stream)
-  "Prints out MATRIX to STREAM."
-  (format stream "~{~%~{~a~4,4T~}~}~%" (matrix-to-list matrix)))
-
-(defun matrix-to-list (matrix)
-  "Turns MATRIX into a list."
-  (loop for x below (m-rows matrix)
-        collect (loop for y below (m-last-col matrix)
-                      collect (mref matrix x y))))
-
-;;identity, and multiply
-(defun to-identity (matrix)
-  "Turns MATRIX into an identity matrix. Returns the matrix."
-  (dotimes (x (m-rows matrix))
-    (dotimes (y (m-last-col matrix))
-      (if (= x y)
-          (setf (mref matrix x y) 1)
-          (setf (mref matrix x y) 0))))
-  matrix)
-
-(defun matrix-multiply (m1 m2)
-  "A specific matrix multiplication routine. M1 is square.
-   Multiplies M1 with M2. Modifies M2 to hold the result. Returns M2."
-  (let* ((dimension (m-rows m1))
-         (temp (make-array dimension)))
-    (dotimes (col (m-last-col m2) m2)
-      (dotimes (i dimension)
-        (setf (svref temp i) (mref m2 i col)))
-      (dotimes (row dimension)
-        (setf (mref m2 row col)
-              (loop for i below (m-cols m1)
-                    sum (* (mref m1 row i) (svref temp i))))))))
+  `(aref (gethash :array ,matrix) ,x ,y))
 
 ;;;transformations
 (defun make-transform-matrix ()

@@ -31,6 +31,25 @@
   `(collect-to
      (nested-loops ,loops ,@(mapcar (lambda (x) `(collect ,x)) bases))))
 
+;;object
+(defmacro def-class (name args &rest rest)
+  (let ((temp (gensym))
+        (arg-names (mapcar #'car args)))
+    `(progn
+       (defun ,(concat-symbol "make-" name) (&key ,@args)
+         (let ((,temp (make-hash-table :size ,(length arg-names))))
+           (setf ,@(loop for arg in arg-names
+                         collect `(gethash ,(make-keyword arg) ,temp)
+                         collect arg))
+           ,temp))
+       (with-args ,arg-names ,name
+         ,@rest))))
+
+(defmacro with-args (args obj &body body)
+  `(symbol-macrolet
+       ,(mapcar (lambda (x) `(,x (gethash ,(make-keyword x) ,obj))) args)
+     ,@body))
+
 ;;control constructs
 (defmacro do-step-max ((var step max) &body body)
   "Iterate for VAR STEP times from 0 to MAX, inclusive."
@@ -116,3 +135,5 @@
   (string-downcase (with-output-to-string (s)
                      (dolist (a args) (princ a s)))))
 
+(defun make-keyword (sym)
+  (intern (string sym) 'keyword))
