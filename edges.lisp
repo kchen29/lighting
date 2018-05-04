@@ -9,14 +9,13 @@
 (defun add-point (edges x y z)
   "Adds a point (x y z) to EDGES."
   (with-args (cols last-col) edges
-             (let ((index last-col))
-               (when (= last-col cols)
-                 (adjust-matrix edges 4 (* 2 cols)))
-               (incf last-col)
-               (setf (mref edges 0 index) x
-                     (mref edges 1 index) y
-                     (mref edges 2 index) z
-                     (mref edges 3 index) 1))))
+    (when (= last-col cols)
+      (adjust-matrix edges 4 (* 2 cols)))
+    (setf (mref edges 0 last-col) x
+          (mref edges 1 last-col) y
+          (mref edges 2 last-col) z
+          (mref edges 3 last-col) 1)
+    (incf last-col)))
 
 ;;;curves
 (defun add-parametric (edges step x-function y-function &optional (z 0))

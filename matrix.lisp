@@ -6,6 +6,10 @@
      (last-col 0)
      (array (make-array (list rows cols) :adjustable t)))
 
+  (defmacro mref (matrix x y)
+    "Accesses array of MATRIX at X and Y."
+    `(aref (gethash :array ,matrix) ,x ,y))
+
   (defun copy-matrix (matrix)
     "Copies a matrix."
     (make-matrix :rows rows :cols cols :last-col last-col :array (copy-array array)))
@@ -45,19 +49,15 @@
   (defun matrix-multiply (matrix m2)
     "A specific matrix multiplication routine. MATRIX is square.
      Multiplies MATRIX with M2. Modifies M2 to hold the result. Returns M2."
-    (with-args (cols2 last-col2 array2) m2
+    (with-args ((cols2 cols) (last-col2 last-col)) m2
       (let ((temp (make-array rows)))
         (dotimes (col last-col2 m2)
           (dotimes (i rows)
-            (setf (svref temp i) (aref array2 i col)))
+            (setf (svref temp i) (mref m2 i col)))
           (dotimes (row rows)
-            (setf (aref array2 row col)
+            (setf (mref m2 row col)
                   (loop for i below cols
                         sum (* (aref array row i) (svref temp i))))))))))
-
-(defmacro mref (matrix x y)
-  "Accesses array of MATRIX at X and Y."
-  `(aref (gethash :array ,matrix) ,x ,y))
 
 ;;;transformations
 (defun make-transform-matrix ()

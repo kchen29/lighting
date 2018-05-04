@@ -47,7 +47,10 @@
 
 (defmacro with-args (args obj &body body)
   `(symbol-macrolet
-       ,(mapcar (lambda (x) `(,x (gethash ,(make-keyword x) ,obj))) args)
+       ,(mapcar (lambda (x) (if (atom x)
+                                `(,x (gethash ,(make-keyword x) ,obj))
+                                `(,(pop x) (gethash ,(make-keyword (car x)) ,obj))))
+         args)
      ,@body))
 
 ;;control constructs
