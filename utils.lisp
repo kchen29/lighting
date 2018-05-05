@@ -52,8 +52,8 @@
                          collect `(gethash ,(make-keyword arg) ,temp)
                          collect arg))
            ,temp))
-       ,@(mapcar (lambda (x) `(defun ,(concat-symbol conc x) (,name)
-                                (gethash ,(make-keyword x) ,name)))
+       ,@(mapcar (lambda (x) `(defmacro ,(concat-symbol conc x) (,name)
+                                `(gethash ,,(make-keyword x) ,,name)))
                  arg-names)
        (with-args ,arg-names ,name
          ,@rest))))
