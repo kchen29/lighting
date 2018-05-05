@@ -32,7 +32,7 @@
 
 (defun draw-lines (edges color)
   "Draws the lines from EDGES to *SCREEN* with COLOR."
-  (do-step (index (gethash :last-col edges) 2)
+  (do-step (index (m-last-col edges) 2)
     (draw-line-index edges index color)))
 
 ;;;3d shapes
@@ -53,7 +53,7 @@
 
 (defun draw-polygons (polygons)
   "Draws the polygons from POLYGONS to *SCREEN*."
-  (do-step (index (gethash :last-col polygons) 3)
+  (do-step (index (m-last-col polygons) 3)
     (let ((normal (normal polygons index)))
       (when (plusp (svref normal 2))
         (draw-polygon-index polygons index (calculate-color (coerce normal 'list)))))))

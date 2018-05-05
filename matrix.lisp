@@ -1,6 +1,6 @@
 ;;;; Matrices and transformations.
 
-(def-class matrix
+(def-class (matrix :conc-name m-)
     ((rows 4)
      (cols 4)
      (last-col 0)
@@ -8,7 +8,7 @@
 
   (defmacro mref (matrix x y)
     "Accesses array of MATRIX at X and Y."
-    `(aref (gethash :array ,matrix) ,x ,y))
+    `(aref (m-array ,matrix) ,x ,y))
 
   (defun copy-matrix (matrix)
     "Copies a matrix."

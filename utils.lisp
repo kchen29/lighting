@@ -32,8 +32,14 @@
      (nested-loops ,loops ,@(mapcar (lambda (x) `(collect ,x)) bases))))
 
 ;;object
-(defmacro def-class (name args &rest rest)
+(defmacro def-class (name-args args &rest rest)
   (let ((temp (gensym))
+        (name (if (listp name-args)
+                  (pop name-args)
+                  name-args))
+        (conc (if (listp name-args)
+                  (getf name-args :conc-name)
+                  (concat-symbol name-args "-")))
         (arg-names (mapcar #'car args)))
     `(progn
        (defun ,(concat-symbol "make-" name) (&key ,@args)
@@ -42,6 +48,9 @@
                          collect `(gethash ,(make-keyword arg) ,temp)
                          collect arg))
            ,temp))
+       ,@(mapcar (lambda (x) `(defun ,(concat-symbol conc x) (,name)
+                                (gethash ,(make-keyword x) ,name)))
+                 arg-names)
        (with-args ,arg-names ,name
          ,@rest))))
 
@@ -50,7 +59,7 @@
        ,(mapcar (lambda (x) (if (atom x)
                                 `(,x (gethash ,(make-keyword x) ,obj))
                                 `(,(pop x) (gethash ,(make-keyword (car x)) ,obj))))
-         args)
+                args)
      ,@body))
 
 ;;control constructs
