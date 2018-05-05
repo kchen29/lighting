@@ -33,6 +33,10 @@
 
 ;;object
 (defmacro def-class (name-args args &rest rest)
+  "Defines a class. NAME-ARGS can be a symbol or a list (with :conc-name).
+   ARGS defines the variables and their initial values.
+   REST is wrapped with a with-args, with all the args, using the NAME of the class.
+   Provides accessor functions for each arg."
   (let ((temp (gensym))
         (name (if (listp name-args)
                   (pop name-args)
@@ -55,6 +59,8 @@
          ,@rest))))
 
 (defmacro with-args (args obj &body body)
+  "Wraps BODY with a symbol-macrolet, allowing each arg in OBJ to be treated as variables.
+   Each arg can be a symbol or a list, where the first element is the 'variable'."
   `(symbol-macrolet
        ,(mapcar (lambda (x) (if (atom x)
                                 `(,x (gethash ,(make-keyword x) ,obj))
